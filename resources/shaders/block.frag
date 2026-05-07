@@ -4,7 +4,7 @@ out vec4 FragColor;
 
 in vec3 vFragPos;
 in vec3 vNormal;
-in vec2 vTexCoord;
+in vec2 vTexCoords;
 // flat in int vTexIndex;
 
 uniform bool uDoSunlight;
@@ -30,8 +30,8 @@ struct DirLight {
 };
 
 struct Material {
-    sampler2D diffuse;
-    sampler2D specular;
+    sampler2D texture_diffuse1;
+    sampler2D texture_specular1;
     float shininess;
 };
 
@@ -63,9 +63,9 @@ vec3 calcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir) {
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess);
 
-    vec3 ambient = light.ambient * vec3(texture(uMaterial.diffuse, vTexCoord));
-    vec3 diffuse = light.diffuse * diff * vec3(texture(uMaterial.diffuse, vTexCoord));
-    vec3 specular = light.specular * spec * vec3(texture(uMaterial.specular, vTexCoord));
+    vec3 ambient = light.ambient * vec3(texture(uMaterial.texture_diffuse1, vTexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(uMaterial.texture_diffuse1, vTexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(uMaterial.texture_specular1, vTexCoords));
 
     float dist = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * dist + light.quadratic * (dist * dist));
@@ -83,8 +83,8 @@ vec3 calcDirLight(DirLight light, vec3 normal, vec3 viewDir) {
     vec3 reflectDir = reflect(-lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess);
 
-    vec3 ambient = light.ambient * vec3(texture(uMaterial.diffuse, vTexCoord));
-    vec3 diffuse = light.diffuse * diff * vec3(texture(uMaterial.diffuse, vTexCoord));
-    vec3 specular = light.specular * spec * vec3(texture(uMaterial.specular, vTexCoord));
+    vec3 ambient = light.ambient * vec3(texture(uMaterial.texture_diffuse1, vTexCoords));
+    vec3 diffuse = light.diffuse * diff * vec3(texture(uMaterial.texture_diffuse1, vTexCoords));
+    vec3 specular = light.specular * spec * vec3(texture(uMaterial.texture_specular1, vTexCoords));
     return (ambient + diffuse + specular);
 }
