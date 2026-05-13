@@ -128,6 +128,13 @@ int main() {
     //     glm::vec3(-4.0f,  2.0f, -12.0f),
     //     glm::vec3( 0.0f,  0.0f, -3.0f)
     // };
+    glm::vec3 grassPositions[] = {
+        glm::vec3(-1.5f, -4.0f, -0.48f),
+        glm::vec3( 1.5f, -4.0f,  0.51f),
+        glm::vec3( 0.0f, -4.0f,  0.7f),
+        glm::vec3(-0.3f, -4.0f, -2.3f),
+        glm::vec3( 0.5f, -4.0f, -0.6f)
+    };
 
     unsigned int VBO, cubeVAO;
     glGenVertexArrays(1, &cubeVAO);
@@ -153,10 +160,10 @@ int main() {
     // ground mesh
     std::vector<Vertex> groundVertices;
     //                        position                            normal                       texture coordinates
-    groundVertices.push_back({glm::vec3(-100.0f, -4.0f, -100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 100.0f)});
-    groundVertices.push_back({glm::vec3( 100.0f, -4.0f, -100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(100.0f, 100.0f)});
-    groundVertices.push_back({glm::vec3( 100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(100.0f, 0.0f)});
-    groundVertices.push_back({glm::vec3(-100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)});
+    groundVertices.push_back({glm::vec3(-100.0f, -4.0f, -100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(  0.0f,   0.0f)});
+    groundVertices.push_back({glm::vec3( 100.0f, -4.0f, -100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(100.0f,   0.0f)});
+    groundVertices.push_back({glm::vec3( 100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(100.0f, 100.0f)});
+    groundVertices.push_back({glm::vec3(-100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(  0.0f, 100.0f)});
     std::vector<unsigned int> groundIndices{0, 1, 2, 0, 2, 3};
     std::vector<Texture> groundTextures{
         {loadTexture(std::string("../resources/textures/grid.png").c_str(), []() {
@@ -167,8 +174,24 @@ int main() {
         }), "texture_diffuse"}
         // {loadTexture(std::string("../resources/textures/grid.png").c_str()), "texture_specular"}
     };
-    glm::vec3 groundColor(0.0f, 0.0f, 1.0f);
+    glm::vec3 groundColor(0.0f);
     Mesh ground(groundVertices, groundIndices, groundTextures, groundColor);
+
+    // grass mesh
+    std::vector<Vertex> grassVertices;
+    grassVertices.push_back({glm::vec3(-0.5f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 0.0f)});
+    grassVertices.push_back({glm::vec3( 0.5f, 1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 0.0f)});
+    grassVertices.push_back({glm::vec3( 0.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(1.0f, 1.0f)});
+    grassVertices.push_back({glm::vec3(-0.5f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f), glm::vec2(0.0f, 1.0f)});
+    std::vector<unsigned int> grassIndices{0, 1, 2, 0, 2, 3};
+    std::vector<Texture> grassTextures{{loadTexture(std::string("../resources/textures/grass.png").c_str(), []() {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }), "texture_diffuse"}};
+    glm::vec3 grassColor(0.0f);
+    Mesh grass(grassVertices, grassIndices, grassTextures, grassColor);
 
     // Oskar donut
     Model model(std::string("../resources/3d-models/donut_oskar/donut_oskar.obj").c_str());
@@ -271,6 +294,13 @@ int main() {
         modelModel = glm::translate(modelModel, glm::vec3(5.0f, 0.0f, 0.0f));
         lightingShader.setMat4("uModel", glm::value_ptr(modelModel));
         model.draw(lightingShader);
+
+        for (unsigned int i = 0; i < (sizeof(grassPositions)/sizeof(grassPositions[0])); i++) {
+            glm::mat4 grassModel(1.0f);
+            grassModel = glm::translate(grassModel, grassPositions[i]);
+            lightingShader.setMat4("uModel", glm::value_ptr(grassModel));
+            grass.draw(lightingShader);
+        }
 
         lightCubeShader.use();
         lightCubeShader.setMat4("uProjection", glm::value_ptr(projection));

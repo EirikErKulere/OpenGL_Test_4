@@ -50,7 +50,11 @@ void main() {
     vec3 viewDir = normalize(-vFragPos);
     vec3 result = vec3(0.0, 1.0, 1.0);
 
-    result += calcDirLight(uSunlight, norm, viewDir);
+    if (!uNoTextures && texture(uMaterial.texture_diffuse1, vTexCoords).a <= 0.1) {
+        discard;
+    }
+
+    result = calcDirLight(uSunlight, norm, viewDir);
     // for (int i = 0; i < NR_POINT_LIGHTS; i++) {
     //     result += calcPointLight(PointLights[i], norm, FragPos, viewDir);
     // }
