@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Shader.h"
+#include "glm/fwd.hpp"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <string>
@@ -22,13 +23,22 @@ public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<Texture> textures;
-    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures) {
+    glm::vec3 color;
+    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures, const glm::vec3& color) {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
+        this->color = color;
+
         setupMesh();
     };
-    void draw(const Shader& shader) {
+    void draw(Shader& shader) {
+        shader.setVec3("uMaterial.color", color);
+        if (textures.size() == 0) {
+            shader.setBool("uNoTextures", true);
+        } else {
+            shader.setBool("uNoTextures", false);
+        }
         unsigned int diffuseNr = 1;
         unsigned int specularNr = 1;
         for (unsigned int i = 0; i < textures.size(); i++) {
@@ -56,6 +66,7 @@ private:
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+        glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, normal));

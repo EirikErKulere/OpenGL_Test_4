@@ -5,18 +5,22 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <string>
+#include <vector>
 
+#include "Mesh.h"
 #include "Shader.h"
 #include "Camera.h"
-#include "Mesh.h"
+#include "Model.h"
+#include "glm/ext/matrix_transform.hpp"
+#include "glm/fwd.hpp"
+#include "loadTexture.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
+// #define STB_IMAGE_IMPLEMENTATION
+// #include "stb_image.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
-unsigned int loadTexture(const char *path);
 
 const unsigned int SCREEN_WIDTH = 1300;
 const unsigned int SCREEN_HEIGHT = 850;
@@ -146,12 +150,35 @@ int main() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
+    // ground mesh
+    std::vector<Vertex> groundVertices;
+    //                        position                            normal                       texture coordinates
+    groundVertices.push_back({glm::vec3(-100.0f, -4.0f, -100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 100.0f)});
+    groundVertices.push_back({glm::vec3( 100.0f, -4.0f, -100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(100.0f, 100.0f)});
+    groundVertices.push_back({glm::vec3( 100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(100.0f, 0.0f)});
+    groundVertices.push_back({glm::vec3(-100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f)});
+    std::vector<unsigned int> groundIndices{0, 1, 2, 0, 2, 3};
+    std::vector<Texture> groundTextures{
+        {loadTexture(std::string("../resources/textures/grid.png").c_str(), []() {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        }), "texture_diffuse"}
+        // {loadTexture(std::string("../resources/textures/grid.png").c_str()), "texture_specular"}
+    };
+    glm::vec3 groundColor(0.0f, 0.0f, 1.0f);
+    Mesh ground(groundVertices, groundIndices, groundTextures, groundColor);
+
+    // Oskar donut
+    Model model(std::string("../resources/3d-models/donut_oskar/donut_oskar.obj").c_str());
+
     unsigned int diffuseMap = loadTexture(std::string("../resources/textures/container2.png").c_str());
     unsigned int specularMap = loadTexture(std::string("../resources/textures/container2_specular.png").c_str());
 
     lightingShader.use();
-    lightingShader.setInt("uMaterial.diffuse", 0);
-    lightingShader.setInt("uMaterial.specular", 1);
+    // lightingShader.setInt("uMaterial.diffuse", 0);
+    // lightingShader.setInt("uMaterial.specular", 1);
 
     while (!glfwWindowShouldClose(window)) {
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -161,16 +188,19 @@ int main() {
         processInput(window);
 
         // glClearColor(0.4f, 0.8f, 1.0f, 1.0f);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        glClearColor(0.53f, 0.81f, 0.92f, 1.0f);
+        // glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         lightingShader.use();
         lightingShader.setFloat("uMaterial.shininess", 32.0f);
 
         lightingShader.setBool("uDoSunlight", true);
-        lightingShader.setVec3("uSunlight.ambient", glm::vec3(0.35f));
-        lightingShader.setVec3("uSunlight.diffuse", glm::vec3(2.0f));
-        lightingShader.setVec3("uSunlight.specular", glm::vec3(2.0f));
+        lightingShader.setVec3("uSunlight.ambient", glm::vec3(0.5f));
+        lightingShader.setVec3("uSunlight.diffuse", glm::vec3(1.4f));
+        lightingShader.setVec3("uSunlight.specular", glm::vec3(0.6f));
+
+        lightingShader.setBool("uNoTextures", false);
 
         // point light 1
         // lightingShader.setVec3("pointLights[0].position", pointLightPositions[0]);
@@ -205,7 +235,7 @@ int main() {
         // lightingShader.setFloat("pointLights[3].linear", 0.09f);
         // lightingShader.setFloat("pointLights[3].quadratic", 0.032f);
 
-        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 500.0f);
         glm::mat4 view = camera.getViewMatrix();
         lightingShader.setMat4("uProjection", glm::value_ptr(projection));
         lightingShader.setMat4("uView", glm::value_ptr(view));
@@ -226,6 +256,21 @@ int main() {
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+
+        lightingShader.setVec3("uSunlight.ambient", glm::vec3(0.5f));
+        lightingShader.setVec3("uSunlight.diffuse", glm::vec3(1.2f));
+        lightingShader.setVec3("uSunlight.specular", glm::vec3(0.4f));
+        glm::mat4 groundModel(1.0f);
+        lightingShader.setMat4("uModel", glm::value_ptr(groundModel));
+        ground.draw(lightingShader);
+        lightingShader.setVec3("uSunlight.ambient", glm::vec3(0.5f));
+        lightingShader.setVec3("uSunlight.diffuse", glm::vec3(1.4f));
+        lightingShader.setVec3("uSunlight.specular", glm::vec3(0.6f));
+
+        glm::mat4 modelModel(1.0f); // modelModel 💀
+        modelModel = glm::translate(modelModel, glm::vec3(5.0f, 0.0f, 0.0f));
+        lightingShader.setMat4("uModel", glm::value_ptr(modelModel));
+        model.draw(lightingShader);
 
         lightCubeShader.use();
         lightCubeShader.setMat4("uProjection", glm::value_ptr(projection));
@@ -290,35 +335,4 @@ void mouseCallback(GLFWwindow* window, double xposIn, double yposIn) {
     lastX = xpos;
     lastY = ypos;
     camera.processMouseMovement(xoffset, yoffset);
-}
-
-unsigned int loadTexture(char const * path) {
-    unsigned int textureID;
-    glGenTextures(1, &textureID);
-    int width, height, nrComponents;
-    unsigned char *data = stbi_load(path, &width, &height, &nrComponents, 0);
-    if (data) {
-        GLenum format;
-        if (nrComponents == 1)
-            format = GL_RED;
-        else if (nrComponents == 3)
-            format = GL_RGB;
-        else if (nrComponents == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        stbi_image_free(data);
-    } else {
-        std::cout << "Texture failed to load at path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-    return textureID;
 }
