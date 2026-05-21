@@ -50,6 +50,7 @@ private:
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
         aiColor3D color;
+        float shininess;
         for (unsigned int i = 0; i < mesh->mNumVertices; i++) {     // vertices
             Vertex vertex;
             glm::vec3 vec;
@@ -85,10 +86,10 @@ private:
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
             material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
-            // std::cout << color.r << color.g << color.b << std::endl;
+            material->Get(AI_MATKEY_SHININESS, shininess);
         }
 
-        return Mesh(vertices, indices, textures, glm::vec3(color.r, color.g, color.b));
+        return Mesh(vertices, indices, textures, glm::vec4(color.r, color.g, color.b, 1.0f), shininess);
     }
     std::vector<Texture> loadMaterialTextures(aiMaterial* material, aiTextureType type, std::string typeName) {
         std::vector<Texture> textures;

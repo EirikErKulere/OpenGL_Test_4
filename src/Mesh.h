@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
+#include <iostream>
 
 struct Vertex {
     glm::vec3 position;
@@ -23,17 +24,26 @@ public:
     std::vector<Vertex> vertices;
     std::vector<unsigned int> indices;
     std::vector<Texture> textures;
-    glm::vec3 color;
-    Mesh(const std::vector<Vertex>& vertices, const std::vector<unsigned int>& indices, const std::vector<Texture>& textures, const glm::vec3& color) {
+    glm::vec4 color;
+    float shininess;
+    Mesh(
+        const std::vector<Vertex>& vertices,
+        const std::vector<unsigned int>& indices,
+        const std::vector<Texture>& textures,
+        const glm::vec4& color = glm::vec4(1.0f),
+        const float& shininess = 32.0f
+    ) {
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
         this->color = color;
+        this->shininess = shininess;
 
         setupMesh();
     };
     void draw(Shader& shader) {
-        shader.setVec3("uMaterial.color", color);
+        shader.setVec4("uMaterial.color", color);
+        shader.setFloat("uMaterial.shininess", shininess);
         if (textures.size() == 0) {
             shader.setBool("uNoTextures", true);
         } else {

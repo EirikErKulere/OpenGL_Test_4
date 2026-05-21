@@ -15,6 +15,7 @@ public:
     void setFloat(const std::string &name, float value) const;
     void setMat4(const std::string &name, float* elements) const;
     void setVec3(const std::string &name, const glm::vec3 &vec);
+    void setVec4(const std::string &name, const glm::vec4 &vec);
 
 private:
     void checkCompileErrors(unsigned int shader, std::string type);
