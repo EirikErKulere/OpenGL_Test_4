@@ -24,6 +24,7 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void processInput(GLFWwindow *window);
 unsigned int loadCubemap(std::vector<std::string> faces);
+std::string getResourcePath(const std::string& relativePath);
 
 unsigned int screenWidth = 1300;
 unsigned int screenHeight = 850;
@@ -79,11 +80,11 @@ int main() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // SHADERS
-    Shader lightingShader("../resources/shaders/block.vert", "../resources/shaders/block.frag");
-    Shader lightCubeShader("../resources/shaders/light_cube.vert", "../resources/shaders/light_cube.frag");
-    Shader screenShader("../resources/shaders/screen.vert", "../resources/shaders/screen.frag");
-    Shader skyboxShader("../resources/shaders/skybox.vert", "../resources/shaders/skybox.frag");
-    // Shader mirrorShader("../resources/shaders/block.vert", "../resources/shaders/mirror.frag");
+    Shader lightingShader(getResourcePath("shaders/block.vert").c_str(), getResourcePath("shaders/block.frag").c_str());
+    Shader lightCubeShader(getResourcePath("shaders/light_cube.vert").c_str(), getResourcePath("shaders/light_cube.frag").c_str());
+    Shader screenShader(getResourcePath("shaders/screen.vert").c_str(), getResourcePath("shaders/screen.frag").c_str());
+    Shader skyboxShader(getResourcePath("shaders/skybox.vert").c_str(), getResourcePath("shaders/skybox.frag").c_str());
+    // Shader mirrorShader("resources/shaders/block.vert", "resources/shaders/mirror.frag");
 
     unsigned int FBO;
     glGenFramebuffers(1, &FBO);
@@ -285,7 +286,7 @@ int main() {
     groundVertices.push_back({glm::vec3(-100.0f, -4.0f,  100.0f), glm::vec3(0.0f, 1.0f, 0.0f), glm::vec2(  0.0f, 100.0f)});
     std::vector<unsigned int> groundIndices{0, 2, 1, 0, 3, 2};
     std::vector<Texture> groundTextures{{
-        loadTexture(std::string("../resources/textures/grid.png").c_str(), []() {
+        loadTexture(getResourcePath("textures/grid.png").c_str(), []() {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
@@ -310,7 +311,7 @@ int main() {
     // std::vector<unsigned int> grassIndices{0, 2, 1, 0, 3, 2, 4, 6, 5, 4, 7, 6};
     std::vector<unsigned int> grassIndices{0, 2, 1, 0, 3, 2};
     std::vector<Texture> grassTextures{{
-        loadTexture(std::string("../resources/textures/blending_transparent_window.png").c_str(), []() {
+        loadTexture(getResourcePath("textures/blending_transparent_window.png").c_str(), []() {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -322,27 +323,27 @@ int main() {
     Mesh grass(grassVertices, grassIndices, grassTextures, grassColor);
 
     // OSKAR DONUT
-    Model model(std::string("../resources/3d-models/donut_oskar/donut_oskar.obj").c_str());
+    Model model(getResourcePath("3d-models/donut_oskar/donut_oskar.obj").c_str());
 
-    unsigned int diffuseMap = loadTexture(std::string("../resources/textures/container2.png").c_str());
-    unsigned int specularMap = loadTexture(std::string("../resources/textures/container2_specular.png").c_str());
+    unsigned int diffuseMap = loadTexture(getResourcePath("textures/container2.png").c_str());
+    unsigned int specularMap = loadTexture(getResourcePath("textures/container2_specular.png").c_str());
 
     // std::vector<std::string> faces {
-    //     "../resources/textures/skybox/right.jpg",
-    //     "../resources/textures/skybox/left.jpg",
-    //     "../resources/textures/skybox/top.jpg",
-    //     "../resources/textures/skybox/bottom.jpg",
-    //     "../resources/textures/skybox/front.jpg",
-    //     "../resources/textures/skybox/back.jpg",
+    //     "resources/textures/skybox/right.jpg",
+    //     "resources/textures/skybox/left.jpg",
+    //     "resources/textures/skybox/top.jpg",
+    //     "resources/textures/skybox/bottom.jpg",
+    //     "resources/textures/skybox/front.jpg",
+    //     "resources/textures/skybox/back.jpg",
     // };
 
     std::vector<std::string> faces {
-        "../resources/textures/clouds1/clouds1_east.bmp",
-        "../resources/textures/clouds1/clouds1_west.bmp",
-        "../resources/textures/clouds1/clouds1_up.bmp",
-        "../resources/textures/clouds1/clouds1_down.bmp",
-        "../resources/textures/clouds1/clouds1_north.bmp",
-        "../resources/textures/clouds1/clouds1_south.bmp",
+        getResourcePath("textures/clouds1/clouds1_east.bmp"),
+        getResourcePath("textures/clouds1/clouds1_west.bmp"),
+        getResourcePath("textures/clouds1/clouds1_up.bmp"),
+        getResourcePath("textures/clouds1/clouds1_down.bmp"),
+        getResourcePath("textures/clouds1/clouds1_north.bmp"),
+        getResourcePath("textures/clouds1/clouds1_south.bmp"),
     };
 
     unsigned int skyboxTexture = loadCubemap(faces);
@@ -416,7 +417,7 @@ int main() {
 
         lightingShader.setMat4("uProjection", glm::value_ptr(projection));
         lightingShader.setMat4("uView", glm::value_ptr(view));
-        lightingShader.setVec3("uSunlight.direction", glm::mat3(view) * glm::normalize(glm::vec3(0.5f, -1.0f, -0.3f)));
+        lightingShader.setVec3("uSunlight.direction", glm::mat3(view) * glm::normalize(glm::vec3(7.5f, -7.0f, -4.0f)));
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -436,7 +437,7 @@ int main() {
 
         // GROUND
         lightingShader.setVec3("uSunlight.ambient", glm::vec3(0.3f));
-        lightingShader.setVec3("uSunlight.diffuse", glm::vec3(1.0f));
+        lightingShader.setVec3("uSunlight.diffuse", glm::vec3(1.3f));
         lightingShader.setVec3("uSunlight.specular", glm::vec3(0.4f));
         glm::mat4 groundModel(1.0f);
         lightingShader.setMat4("uModel", glm::value_ptr(groundModel));
@@ -601,4 +602,8 @@ unsigned int loadCubemap(std::vector<std::string> faces) {
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return textureID;
+}
+
+std::string getResourcePath(const std::string& relativePath) {
+    return std::string(RESOURCE_PATH) + "/" + relativePath;
 }
