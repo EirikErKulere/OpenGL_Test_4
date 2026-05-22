@@ -1,48 +1,40 @@
-cmake_minimum_required(VERSION 3.10)
-project(OpenGL_Test_4 C CXX)
+cmake_minimum_required(VERSION 3.15)
+
+project(OpenGL_Test_4 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(SOURCES
+add_executable(${PROJECT_NAME}
     src/main.cpp
     src/Shader.cpp
     src/loadTexture.cpp
     src/glad.c
 )
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+install(DIRECTORY resources DESTINATION share/${PROJECT_NAME})
+
+target_compile_definitions(${PROJECT_NAME}
+    PRIVATE RESOURCE_PATH="${CMAKE_INSTALL_PREFIX}/share/${PROJECT_NAME}/resources"
+)
 
 include_directories(include)
 
-if(APPLE)
-    set(HOMEBREW_PREFIX "/opt/homebrew")
-    if (EXISTS "/usr/local/lib/libglfw.dylib")
-        set(HOMEBREW_PREFIX "/usr/local")
-    endif()
+find_package(glfw3 REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(assimp REQUIRED)
 
-    message(STATUS "Using Homebrew prefix: ${HOMEBREW_PREFIX}")
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE
+    glfw
+    OpenGL::GL
+    assimp::assimp
+)
 
-    include_directories(${HOMEBREW_PREFIX}/include)
-    link_directories(${HOMEBREW_PREFIX}/lib)
-
-    find_package(assimp REQUIRED)
-
+if(UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME}
-        "-L${HOMEBREW_PREFIX}/lib"
-        glfw
-        assimp::assimp
-        "-framework Cocoa"
-        "-framework IOKit"
-        "-framework CoreVideo"
-        "-framework OpenGL"
-    )
-elseif(UNIX)
-    cmake_policy(SET CMP0072 NEW)
-    find_package(OpenGL REQUIRED)
-    target_link_libraries(${PROJECT_NAME}
-        glfw
-        ${OPENGL_gl_LIBRARY}
+        PRIVATE
         dl
         pthread
     )
