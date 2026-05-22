@@ -7,3 +7,8 @@ Prosjekt for å teste ting i OpenGL.
 brew tap eirikerkulere/opengl
 brew install opengl-test-4
 ```
+
+### Kjør prosjektet:
+```bash
+OpenGL_Test_4
+```
